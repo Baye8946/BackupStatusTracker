@@ -1,0 +1,12 @@
+<Configuration>
+    <MappedFolders>
+        <MappedFolder>
+            <HostFolder>C:\SandboxShare</HostFolder>
+            <SandboxFolder>C:\SandboxShare</SandboxFolder>
+            <ReadOnly>false</ReadOnly>
+        </MappedFolder>
+    </MappedFolders>
+    <LogonCommand>
+        <Command>powershell -ExecutionPolicy Bypass -File C:\SandboxShare\BackupStatusTracker.ps1 -ComputerName %COMPUTERNAME% -BackupPath C:\SandboxShare\Backups -Verbose -GenerateReport</Command>
+    </LogonCommand>
+</Configuration>                
