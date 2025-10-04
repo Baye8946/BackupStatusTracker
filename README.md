@@ -39,6 +39,22 @@ $latestCsv = Get-ChildItem -Path C:\SandboxShare\BackupReport_*.csv | Sort-Objec
 Import-Csv -Path $latestCsv.FullName | Format-Table
 ```
 
+# Debugging Journey
+Resolved issues like:
 
+* Execution policy errors with **-ExecutionPolicy Bypass**.
+* Invalid BackupPath by creating directories.
+* RPC server is unavailable with local Get-CimInstance.
+* Syntax errors (try-catch, extra }) using brace matching.
+* Missing Get-BackupStatus function with inline logic.
+* Import-Csv wildcard issues by selecting the latest CSV.
+
+# Real-World Utility
+Automates backup checks for SMBs/MSPs, saving time and ensuring compliance. See my [Medium post](https://medium.com/@bayealfa8/heres-how-i-built-a-powershell-backup-monitoring-tool-using-windows-sandbox-as-a-test-ground-64a702197d30) for details.
+
+# Next Steps
+* Add email alerts for stale backups.
+* Support remote servers via WinRM.
+* Create HTML reports.
 
 
