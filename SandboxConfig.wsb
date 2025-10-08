@@ -7,6 +7,6 @@
         </MappedFolder>
     </MappedFolders>
     <LogonCommand>
-        <Command>powershell -ExecutionPolicy Bypass -File C:\SandboxShare\BackupStatusTracker.ps1 -ComputerName %COMPUTERNAME% -BackupPath C:\SandboxShare\Backups -Verbose -GenerateReport</Command>
+        <Command>powershell -ExecutionPolicy Bypass -File C:\SandboxShare\BackupStatusTracker.ps1 -ComputerName %COMPUTERNAME% -BackupPath C:\SandboxShare\Backups -Verbose -GenerateReport -GenerateHtmlReport</Command>
     </LogonCommand>
 </Configuration>                
