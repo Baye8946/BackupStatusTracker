@@ -54,9 +54,13 @@ param (
     [Parameter()]
     [int]$MaxBackupAgeHours = 24,
     [Parameter()]
-    [switch]$GenerateReport,
+    [switch]$GenerateReport, # for CSV
     [Parameter()]
-    [string]$OutputPath = "C:\SandboxShare\BackupReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
+    [switch]$GenerateHtmlReport,
+    [Parameter()]
+    [string]$OutputPath = "C:\SandboxShare\BackupReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv",
+    [Parameter()]
+    [string]$HtmlOutputPath = "C:\SandboxShare\BackupReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
 )
 
 begin {
@@ -74,6 +78,7 @@ process {
             IsStale           = $true
             BackupDriveFreeGB = "Unknown"
             ErrorMessage      = $null
+            RowClass          = "error"
         }
 
         try {
@@ -83,6 +88,7 @@ process {
                     $result.LastBackup = $backupFiles.LastWriteTime
                     $result.Status = "Success (File-Based)"
                     $result.IsStale = ((Get-Date) - $backupFiles.LastWriteTime).TotalHours -gt $MaxBackupAgeHours
+                    $result.RowClass = if ($result.IsStale) { "stale" } else { "success" }
                 } else {
                     $result.ErrorMessage = "No backup files found in $BackupPath"
                 }
@@ -108,6 +114,8 @@ process {
 
 end {
     $results | Format-Table -AutoSize
+
+    # Generate CSV Report
     if ($GenerateReport -and $OutputPath) {
         try {
             $results | Export-Csv -Path $OutputPath -NoTypeInformation -ErrorAction Stop
@@ -115,6 +123,40 @@ end {
             Write-Output "Report saved to $OutputPath"
         } catch {
             Write-Warning "Failed to export report: $($_.Exception.Message)"
+        }
+    }
+    # Generate HTML Report
+    if ($GenerateHtmlReport -and $HtmlOutputPath) {
+        try {
+            $css = @"
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #333; }
+                table { border-collapse: collapse; width: 100% }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #4CAF50; color: white; }
+                tr:nth-child(even) { background-color: #f2f2f2; }
+                .stale { background-color: #f8d7da; color: #721c24; } /* Red for stale */
+                .success { background-color: #d4edda; color: #155724; } /* Green for success */
+                .error {background-color: #fff3cd; color: #856404; } /* Yellow for errors */
+            </style>
+"@
+
+            $htmlBody = $results | ConvertTo-Html -Title "Backup Status Report" -PreContent "<h1>Backup Status Report - $(Get-Date)<h1>$css" -Property ComputerName, LastBackup,Status,IsStale,BackupDriveFreeGB,ErrorMessage | ForEach-Object {
+               if ($_ -match '<tr><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>') {
+                    $rowClass = $results[$matches[0].IndexOf($_) / 2 - 1].RowClass
+                    $_ -replace '<tr>', "<tr class='$rowClass'>"
+                } else {
+                    $_
+                }
+            }
+            $htmlBody | Out-File -FilePath $HtmlOutputPath -Encoding UTF8 -ErrorAction Stop
+            Write-Verbose "HTML report exported to $HtmlOutputPath"
+            Write-Output "HTML report saved to $HtmlOutputPath"
+        }
+        catch {
+            Write-Warning "Failed to export HTML report: $($_.Exception.Message)"
+            
         }
     }
 }
